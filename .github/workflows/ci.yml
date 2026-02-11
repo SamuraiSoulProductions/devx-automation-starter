@@ -39,11 +39,21 @@ jobs:
       - name: Build devx_cli (release)
         run: cargo build --release -p devx_cli --locked
 
+      - name: Debug: show built binaries
+        run: |
+          ls -lah target/release || true
+          file target/release/* || true
+
       - name: Doctor
         run: ./target/release/devx_cli doctor
 
       - name: Run CI via devx_cli
         run: ./target/release/devx_cli run ci
+
+      - name: Debug: show docs diff if any
+        run: |
+          git status --porcelain
+          git diff -- docs/COMMANDS.md || true
 
       - name: Docs must be committed
         run: git diff --exit-code docs/COMMANDS.md
