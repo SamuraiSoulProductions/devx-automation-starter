@@ -34,14 +34,20 @@ enum Cmd {
     EmitHelp,
 }
 
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 enum RunTask {
-    /// Generate docs/COMMANDS.md from CLI help
+    /// Generate docs (COMMANDS.md) deterministically
     Docs,
-    /// Run Rust + Python tests
+    /// Run Python tests (pytest)
     Test,
-    /// Run a local "CI-like" suite (fmt + clippy + tests + docs)
+    /// Run full CI: fmt + clippy + tests + docs sync
     Ci,
+    /// Format Rust code
+    Fmt,
+    /// Lint Rust code (clippy -D warnings)
+    Lint,
+    /// Build Rust CLI
+    Build,
 }
 
 fn main() -> ExitCode {
@@ -60,6 +66,9 @@ fn main() -> ExitCode {
             RunTask::Docs => run_docs(),
             RunTask::Test => run_tests(),
             RunTask::Ci => run_ci(),
+            RunTask::Fmt => run_fmt(),
+            RunTask::Lint => run_lint(),
+            RunTask::Build => run_build(),
         },
     }
 }
@@ -182,6 +191,68 @@ fn run_ci() -> ExitCode {
     );
 
     if ok {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::from(2)
+    }
+}
+
+fn run_fmt() -> ExitCode {
+    let root = match find_repo_root() {
+        Some(r) => r,
+        None => {
+            eprintln!("Could not find repo root (.git). Run inside the repo.");
+            return ExitCode::from(2);
+        }
+    };
+
+    let rust_dir = root.join("rust/devx_cli");
+
+    if run_ok(
+        Command::new("cargo")
+            .args(["fmt", "--all"])
+            .current_dir(&rust_dir),
+    ) {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::from(2)
+    }
+}
+
+fn run_lint() -> ExitCode {
+    let root = match find_repo_root() {
+        Some(r) => r,
+        None => {
+            eprintln!("Could not find repo root (.git). Run inside the repo.");
+            return ExitCode::from(2);
+        }
+    };
+
+    let rust_dir = root.join("rust/devx_cli");
+
+    if run_ok(
+        Command::new("cargo")
+            .args(["clippy", "--all-targets", "--", "-D", "warnings"])
+            .current_dir(&rust_dir),
+    ) {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::from(2)
+    }
+}
+
+fn run_build() -> ExitCode {
+    let root = match find_repo_root() {
+        Some(r) => r,
+        None => {
+            eprintln!("Could not find repo root (.git). Run inside the repo.");
+            return ExitCode::from(2);
+        }
+    };
+
+    let rust_dir = root.join("rust/devx_cli");
+
+    if run_ok(Command::new("cargo").arg("build").current_dir(&rust_dir)) {
         ExitCode::SUCCESS
     } else {
         ExitCode::from(2)
