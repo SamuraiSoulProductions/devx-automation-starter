@@ -21,9 +21,6 @@ jobs:
 
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: |
-            rust/devx_cli -> target
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -36,24 +33,14 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pytest
 
-      - name: Rust fmt check
-        run: cargo fmt --all -- --check
+      - name: Build devx_cli (release)
+        run: cargo build --release -p devx_cli
 
-      - name: Rust clippy
-        run: cargo clippy --all-targets -- -D warnings
+      - name: Doctor
+        run: ./target/release/devx_cli doctor
 
-      - name: Rust tests
-        run: cargo test
-
-      - name: Generate docs
-        env:
-          PYTHONPATH: python/tools
-        run: python python/tools/tools/gen_docs.py
+      - name: Run CI via devx_cli
+        run: ./target/release/devx_cli run ci
 
       - name: Docs must be committed
         run: git diff --exit-code docs/COMMANDS.md
-
-      - name: Pytest
-        env:
-          PYTHONPATH: python/tools
-        run: python -m pytest -q
