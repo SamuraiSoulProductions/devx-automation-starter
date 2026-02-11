@@ -77,9 +77,16 @@ fn doctor() -> ExitCode {
     ok &= check_cmd("cargo", &["--version"]);
 
     ok &= check_any_cmd(&["python", "python3"], &["--version"]);
-    ok &= check_any_cmd(&["pytest", "python", "python3"], &["-m", "pytest", "--version"]);
+    ok &= check_any_cmd(
+        &["pytest", "python", "python3"],
+        &["-m", "pytest", "--version"],
+    );
 
-    if ok { ExitCode::SUCCESS } else { ExitCode::from(2) }
+    if ok {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::from(2)
+    }
 }
 
 fn run_docs() -> ExitCode {
@@ -122,9 +129,17 @@ fn run_tests() -> ExitCode {
     let mut ok = true;
 
     ok &= run_ok(Command::new("cargo").arg("test").current_dir(&rust_dir));
-    ok &= run_ok(Command::new(python).args(["-m", "pytest", "-q"]).current_dir(&python_dir));
+    ok &= run_ok(
+        Command::new(python)
+            .args(["-m", "pytest", "-q"])
+            .current_dir(&python_dir),
+    );
 
-    if ok { ExitCode::SUCCESS } else { ExitCode::from(2) }
+    if ok {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::from(2)
+    }
 }
 
 fn run_ci() -> ExitCode {
@@ -142,15 +157,35 @@ fn run_ci() -> ExitCode {
 
     let mut ok = true;
 
-    ok &= run_ok(Command::new("cargo").args(["fmt", "--all", "--", "--check"]).current_dir(&rust_dir));
-    ok &= run_ok(Command::new("cargo").args(["clippy", "--all-targets", "--", "-D", "warnings"]).current_dir(&rust_dir));
+    ok &= run_ok(
+        Command::new("cargo")
+            .args(["fmt", "--all", "--", "--check"])
+            .current_dir(&rust_dir),
+    );
+    ok &= run_ok(
+        Command::new("cargo")
+            .args(["clippy", "--all-targets", "--", "-D", "warnings"])
+            .current_dir(&rust_dir),
+    );
     ok &= run_ok(Command::new("cargo").arg("test").current_dir(&rust_dir));
 
     // docs generation should be deterministic; tests enforce sync
-    ok &= run_ok(Command::new(python.clone()).arg("python/tools/tools/gen_docs.py").current_dir(&root));
-    ok &= run_ok(Command::new(python).args(["-m", "pytest", "-q"]).current_dir(&python_dir));
+    ok &= run_ok(
+        Command::new(python.clone())
+            .arg("python/tools/tools/gen_docs.py")
+            .current_dir(&root),
+    );
+    ok &= run_ok(
+        Command::new(python)
+            .args(["-m", "pytest", "-q"])
+            .current_dir(&python_dir),
+    );
 
-    if ok { ExitCode::SUCCESS } else { ExitCode::from(2) }
+    if ok {
+        ExitCode::SUCCESS
+    } else {
+        ExitCode::from(2)
+    }
 }
 
 fn run_ok(cmd: &mut Command) -> bool {
@@ -175,10 +210,8 @@ fn check_cmd(cmd: &str, args: &[&str]) -> bool {
 
 fn check_any_cmd(cmds: &[&str], args: &[&str]) -> bool {
     for c in cmds {
-        if let Ok(s) = Command::new(c).args(args).status() {
-            if s.success() {
-                return true;
-            }
+        if matches!(Command::new(c).args(args).status(), Ok(s) if s.success()) {
+            return true;
         }
     }
     eprintln!("Missing or failing one of: {:?}", cmds);
