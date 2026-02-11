@@ -1,47 +1,52 @@
 name: CI
+
 on:
-  pull_request:
   push:
-    branches: [ main ]
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
 
 jobs:
-  build-test:
+  ci:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Set up Rust
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust (stable + clippy + rustfmt)
         uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
 
-      - name: Rust fmt
-        working-directory: rust/devx_cli
-        run: cargo fmt --all -- --check
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            rust/devx_cli -> target
 
-      - name: Rust clippy
-        working-directory: rust/devx_cli
-        run: cargo clippy --all-targets -- -D warnings
-
-      - name: Rust build/test
-        working-directory: rust/devx_cli
-        run: |
-          cargo test
-          cargo build
-
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: "pip"
 
-      - name: Install pytest
-        working-directory: python/tools
+      - name: Install Python deps
         run: |
           python -m pip install --upgrade pip
-          pip install pytest
+          python -m pip install pytest
 
-      - name: Generate docs + run tests
-        working-directory: python/tools
-        run: |
-          python tools/gen_docs.py
-          pytest -q
+      - name: Build devx_cli (release)
+        working-directory: rust/devx_cli
+        run: cargo build --release
+
+      - name: Smoke: doctor
+        run: ./rust/devx_cli/target/release/devx_cli doctor
+
+      - name: Run CI via devx_cli
+        env:
+          PYTHONPATH: python/tools
+        run: ./rust/devx_cli/target/release/devx_cli run ci
+
+      - name: Docs must be committed
+        run: git diff --exit-code docs/COMMANDS.md

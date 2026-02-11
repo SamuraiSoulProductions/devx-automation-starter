@@ -1,4 +1,4 @@
-use clap::{CommandFactory, Parser, Subcommand};
+use clap::{ColorChoice, CommandFactory, Parser, Subcommand};
 use std::path::PathBuf;
 use std::process::{Command, ExitCode};
 
@@ -74,8 +74,9 @@ fn main() -> ExitCode {
 }
 
 fn print_long_help() {
+    // Make help output deterministic across environments (CI vs local)
     let mut cmd = Cli::command();
-    cmd.build();
+    cmd = cmd.color(ColorChoice::Never).term_width(100);
     print!("{}", cmd.render_long_help());
 }
 
@@ -86,10 +87,9 @@ fn doctor() -> ExitCode {
     ok &= check_cmd("cargo", &["--version"]);
 
     ok &= check_any_cmd(&["python", "python3"], &["--version"]);
-    ok &= check_any_cmd(
-        &["pytest", "python", "python3"],
-        &["-m", "pytest", "--version"],
-    );
+
+    // Prefer python -m pytest for consistency across installs
+    ok &= check_any_cmd(&["python", "python3"], &["-m", "pytest", "--version"]);
 
     if ok {
         ExitCode::SUCCESS
@@ -115,7 +115,8 @@ fn run_docs() -> ExitCode {
 
     let python = pick_cmd(&["python", "python3"]).unwrap_or_else(|| "python3".to_string());
     let script = root.join("python/tools/tools/gen_docs.py");
-    if run_ok(Command::new(python).arg(script)) {
+
+    if run_ok(Command::new(python).arg(script).current_dir(&root)) {
         ExitCode::SUCCESS
     } else {
         ExitCode::from(2)
@@ -208,11 +209,7 @@ fn run_fmt() -> ExitCode {
 
     let rust_dir = root.join("rust/devx_cli");
 
-    if run_ok(
-        Command::new("cargo")
-            .args(["fmt", "--all"])
-            .current_dir(&rust_dir),
-    ) {
+    if run_ok(Command::new("cargo").args(["fmt", "--all"]).current_dir(&rust_dir)) {
         ExitCode::SUCCESS
     } else {
         ExitCode::from(2)
@@ -291,7 +288,7 @@ fn check_any_cmd(cmds: &[&str], args: &[&str]) -> bool {
 
 fn pick_cmd(cmds: &[&str]) -> Option<String> {
     for c in cmds {
-        if Command::new(c).arg("--version").status().is_ok() {
+        if matches!(Command::new(c).arg("--version").status(), Ok(s) if s.success()) {
             return Some((*c).to_string());
         }
     }
