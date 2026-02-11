@@ -10,6 +10,8 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: python/tools
 
     steps:
       - name: Checkout
@@ -38,13 +40,9 @@ jobs:
         run: cargo build --release -p devx_cli --locked
 
       - name: Doctor
-        env:
-          PYTHONPATH: python/tools
         run: ./target/release/devx_cli doctor
 
       - name: Run CI via devx_cli
-        env:
-          PYTHONPATH: python/tools
         run: ./target/release/devx_cli run ci
 
       - name: Docs must be committed
