@@ -5,6 +5,7 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+  workflow_dispatch:
 
 jobs:
   ci:
@@ -34,12 +35,16 @@ jobs:
           python -m pip install pytest
 
       - name: Build devx_cli (release)
-        run: cargo build --release -p devx_cli
+        run: cargo build --release -p devx_cli --locked
 
       - name: Doctor
+        env:
+          PYTHONPATH: python/tools
         run: ./target/release/devx_cli doctor
 
       - name: Run CI via devx_cli
+        env:
+          PYTHONPATH: python/tools
         run: ./target/release/devx_cli run ci
 
       - name: Docs must be committed
