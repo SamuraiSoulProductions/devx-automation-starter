@@ -1,11 +1,16 @@
-# Commands\n\nThis file is auto-generated from `devx_cli --help`.\n\n```text\ndevx_cli — tiny DevEx demo tool
+# Commands\n\nThis file is auto-generated from `devx_cli --help`.\n\n```text\nTiny DevEx demo tool (automation + CI patterns)
 
-USAGE:
-  devx_cli help
-  devx_cli version
-  devx_cli emit-help
+Usage: devx_cli <COMMAND>
 
-WHY:
-  Demonstrates repo automation patterns: docs generation + CI enforcement.
+Commands:
+  help    Show help (explicit command for README-friendly UX)
+  doctor  Print an environment report (rust/python/pytest)
+  run     Run repo automation tasks
 
+Options:
+  -h, --help
+          Print help
+
+  -V, --version
+          Print version
 ```\n

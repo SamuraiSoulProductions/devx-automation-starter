@@ -209,7 +209,11 @@ fn run_fmt() -> ExitCode {
 
     let rust_dir = root.join("rust/devx_cli");
 
-    if run_ok(Command::new("cargo").args(["fmt", "--all"]).current_dir(&rust_dir)) {
+    if run_ok(
+        Command::new("cargo")
+            .args(["fmt", "--all"])
+            .current_dir(&rust_dir),
+    ) {
         ExitCode::SUCCESS
     } else {
         ExitCode::from(2)
