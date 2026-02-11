@@ -6,3 +6,4 @@ A tiny, production-flavored demo of developer-experience automation:
 - CI that enforces formatting/lint/tests + doc sync
 
 This repo is intentionally minimal and safe-to-share; it demonstrates patterns used in larger codebases.
+# devx-automation-starter
