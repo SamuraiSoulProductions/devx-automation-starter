@@ -7,7 +7,8 @@ use std::process::{Command, ExitCode};
     name = "devx_cli",
     version = "0.2.0",
     about = "Tiny DevEx demo tool (automation + CI patterns)",
-    arg_required_else_help = true
+    arg_required_else_help = true,
+    disable_help_subcommand = true
 )]
 struct Cli {
     #[command(subcommand)]

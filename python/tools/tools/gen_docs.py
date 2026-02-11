@@ -3,6 +3,14 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
+def find_root(start: Path) -> Path:
+    start = start.resolve()
+    for p in [start] + list(start.parents):
+        if (p / ".git").exists():
+            return p
+    raise SystemExit("Repo root not found (.git).")
+
+
 
 def find_repo_root(start: Path) -> Path:
     p = start.resolve()
@@ -12,7 +20,7 @@ def find_repo_root(start: Path) -> Path:
     raise RuntimeError("Repo root not found (no .git).")
 
 
-ROOT = find_repo_root(Path(__file__).resolve())
+ROOT = find_root(Path(__file__))
 DOCS = ROOT / "docs" / "COMMANDS.md"
 BIN = ROOT / "rust" / "devx_cli" / "target" / "debug" / "devx_cli"
 
