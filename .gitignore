@@ -1,0 +1,12 @@
+.env
+*.key
+*.pem
+*.p12
+target/
+__pycache__/
+.venv/
+dist/
+build/
+*.log
+.DS_Store
+.vscode/settings.json
